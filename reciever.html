@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciever</title>
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="./js/peerjs.min.js"></script>
+
+</head>
+
+<body>
+    <h1 class="heading">
+        Reciever
+    </h1>
+    <div class="container">
+        <h2 class="peer_id">Reciever Peer ID : <span id="reciever_peer_id">......</span></h2>
+        <div class="input">
+            <input type="text" placeholder="Enter Sender Peer ID" id="recieverInputArea">
+            <button>Connect</button>
+        </div>
+        <div class="connectionStatus">
+            Not Connected
+        </div>
+
+
+        <div class="callArea">
+            <button onclick="generateReceive()" id="call">
+                Receive
+            </button>
+        </div>
+        <hr>
+        <div class="videoArea">
+            <video id="sendervideo"></video>
+            <video id="recievervideo"></video>
+        </div>
+    </div>
+
+
+    <br><br><br><br><br><br><br><br><br><br>
+
+    <script>
+        let connectionStatus = document.querySelector(".connectionStatus")
+        let peer = new Peer();
+        let recieverID
+        peer.on("open", (id) => {
+            recieverID = id;
+            document.querySelector("#reciever_peer_id").innerHTML = recieverID
+        })
+
+
+        let senderIdValue = document.querySelector("#recieverInputArea")
+
+        let connectBTN = document.querySelector("button")
+
+        // connection establishment function 
+        connectBTN.onclick = () => {
+            connectionStatus.innerHTML = "Connecting"
+            connectionStatus.classList.add("connecting")
+            let conn = peer.connect(senderIdValue.value);
+            // Connection status
+            conn.on('open', function () {
+                connectionStatus.classList.remove("connecting")
+                connectionStatus.innerHTML = "Connected"
+                connectionStatus.classList.add("connected")
+            })
+        }
+
+
+
+        //generate recieve function
+
+        function generateReceive() {
+            peer.on("call", function (call) {
+                let mediaCaptureOption = {
+                    "video": true,
+                    "audio": false
+                };
+                navigator.mediaDevices.getUserMedia(mediaCaptureOption).then(fileStream => {
+                    call.answer(fileStream);
+                    // reciever video 
+                    let recievervideo = document.getElementById('recievervideo');
+                    recievervideo.srcObject = fileStream;
+                    recievervideo.play();
+
+                    call.on('stream', function (remoteStream) {
+                        // sender Video
+                        let sendervideo = document.getElementById('sendervideo');
+                        sendervideo.srcObject = remoteStream;
+                        sendervideo.play();
+                    });
+                })
+
+            })
+        }
+    </script>
+</body>
+
+</html>
